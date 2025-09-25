@@ -1,0 +1,227 @@
+---
+title: "visualization"
+output: github_document
+date: "2025-09-25"
+---
+
+```{r}
+library(tidyverse)
+library(ggridges)
+library(p8105.datasets)
+```
+
+Import the weather data
+```{r}
+data("weather_df")
+
+```
+
+
+```{r}
+ggplot(data = weather_df, mapping = aes(x=tmin, y=tmax)) +
+  geom_point()
+```
+
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax)) +
+  geom_point()
+```
+
+```{r}
+gg_weather_scatterplot =
+  weather_df |>
+   ggplot(aes(x=tmin, y=tmax)) +
+  geom_point()
+
+ggp_weather_scatterplot
+```
+
+Check that some rows are missing
+```{r}
+weather_df |>
+  filter(is.na(tmax))
+```
+
+
+##fancier scatterplots!
+Different aesthetics functions:
+Alpha makes the points on the scatterplot more transparent to see the density
+geom_smooth creates the trendline
+All the lines that go under ggplot are applied unless specified otherwise
+prcp is precipitation variable in the climate dataset
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax)) +
+  geom_point(aes(color = name, size = prcp), alpha = 0.3) +
+  geom_smooth(se = FALSE)
+```
+
+use faceting
+~ : communicates to R, the difference between left and right. In facet: row ~ column.
+1. nothing in row, column by name
+2. name by row, nothing in column
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax)) +
+  geom_point(aes(color = name, size = prcp), alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(.~name)
+
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax)) +
+  geom_point(aes(color = name, size = prcp), alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(name ~ .)
+```
+
+Let's make a somewhat more interesting scatterplot
+shape: 
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax, color = name, shape = name)) +
+  geom_point(aes( size = prcp), alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+Learning assessment
+"se=FLASE" inside the geom_smooth gets rid of the error bars
+method = "lm" gives linear regression line
+```{r}
+weather_df |>
+  filter(name == "CentralPark_NY") |>
+  mutate(
+    tmax_fahr = tmax * (9/5) + 32,
+    tmin_fahr = tmin * (9/5) + 32
+  ) |>
+  ggplot(aes(x = tmin_fahr, y=tmax_fahr))+
+  geom_point() +
+  geom_smooth(se= FALSE, method = "lm")
+```
+
+##Small things
+you can take out things in your plot by commenting them out (adding #)
+You want geom_smooth to be the last function
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax, color = name, shape = name)) +
+# geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE) 
+
+weather_df |>
+  ggplot(aes(x=tmin, y=tmax, color = name, shape = name)) +
+  geom_smooth(se = FALSE)+
+  geom_point() 
+```
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y=tmax)) +
+  geom_hex()
+```
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y=tmax)) +
+  geom_point(color = "purple")
+```
+
+##univariate plots
+making a histogram
+color is for the outline, fill is for the inside of the bars
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin)) +
+  geom_histogram(color="white", fill="red")
+```
+
+Overlapping histogram
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, color=name))+
+  geom_histogram()
+
+weather_df |>
+  ggplot(aes(x=tmin, fill=name))+
+  geom_histogram()
+```
+
+Add facet grid: to make them so theyre not overlapping
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, fill=name))+
+  geom_histogram()+
+  facet_grid(name~.)
+```
+
+Or you could make a density plot
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, fill=name)) +
+  geom_density(alpha=0.2)
+```
+
+Making a boxplot
+```{r}
+weather_df |>
+  ggplot(aes(x=name, y=tmin))+
+  geom_boxplot(aes(fill=name))
+```
+
+Violin plots
+```{r}
+weather_df |>
+  ggplot(aes(x=name, y=tmin, fill=name))+
+  geom_violin()
+```
+
+ridge plots
+```{r}
+weather_df |>
+  ggplot(aes(x=tmin, y=name, fill=name))+
+  geom_density_ridges()
+```
+
+Learning assessment: Make plots that compare precipitation across locations. Try a histogram, a density plot, a boxplot, a violin plot, and a ridgeplot; use aesthetic mappings to make your figure readable
+```{r}
+weather_df |>
+  ggplot(aes(x=prcp, fill=name)) +
+  geom_density(alpha=0.2)
+
+weather_df |>
+  ggplot(aes(x=prcp, fill=name)) +
+  geom_histogram() +
+  facet_grid(name~.)
+
+#changing the scale and making the density plot look better, but remember that you are only looking at when it's raining more than 5mm and less than 1000mm
+
+weather_df |>
+  filter(prcp > 5, prcp <1000) |>
+  ggplot(aes(x=prcp, fill=name)) +
+  geom_density(alpha=0.2)
+```
+
+#Saving plots
+
+```{r}
+ggp_weather_violin =
+  weather_df |>
+  ggplot(aes(x=name, y=tmin, fill=name))+
+  geom_violin()
+
+ggp_weather_violin
+
+ggsave("plots/violin_plot.pdf", ggp_weather_violin,
+       width = 8, height=6)
+```
+
+embedding plots
+```{r, fig.width = 6, fig.height = 4}
+ggp_weather_violin
+
+```
+
+
+
+
