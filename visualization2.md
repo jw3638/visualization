@@ -254,3 +254,62 @@ pulse_df |>
     ## (`stat_boxplot()`).
 
 ![](visualization2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Make a plot for the FAS study
+
+``` r
+pups_df =
+  read_csv("data/FAS_pups.csv", na = c("NA", ".", ""), skip = 3) |>
+  janitor::clean_names() |>
+  mutate(
+    sex= case_match(
+      sex,
+      1~"male",
+      2~"female"
+    )
+  )
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): Litter Number
+    ## dbl (5): Sex, PD ears, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litters_df =
+  read_csv("data/FAS_litters.csv", na=c("NA", ".", "")) |>
+  janitor::clean_names() |>
+  separate(group, into = c("dose", "tx_day"), sep=3)
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+fas_df =
+  left_join(pups_df, litters_df, by = "litter_number")
+
+fas_df |>
+  select(pd_ears:tx_day)|>
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome",
+    names_prefix = "pd_",
+    values_to = "pn_day") |>
+  drop_na() |>
+  ggplot(aes(x = dose, y=pn_day)) +
+  geom_violin() +
+  facet_grid(tx_day ~ outcome)
+```
+
+![](visualization2_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
